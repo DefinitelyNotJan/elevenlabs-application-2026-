@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Jan Lönnqvist | AI Creative Producer | ElevenLabs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --black: #000000;
+            --white: #FFFFFF;
+            --gray-50: #F2F2F2;
+            --gray-100: #E6E6E6;
+            --gray-400: #999999;
+            --gray-600: #666666;
+            --gray-800: #333333;
+            --gray-900: #1C1C1C;
+            --blue: #5D79DF;
+            --blue-dark: #4056CE;
+            --purple: #C47DE5;
+            --cyan: #19A2C1;
+            --green: #10B978;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--black);
+            color: var(--white);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* SOUND FLOW CURSOR                               */
+        /* ═══════════════════════════════════════════════ */
+        .cursor-sound {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+        }
+        .cursor-sound svg {
+            width: 100%;
+            height: 100%;
+        }
+        .cursor-sound .wave {
+            fill: none;
+            stroke: var(--blue);
+            stroke-width: 2;
+            stroke-linecap: round;
+            opacity: 0.8;
+        }
+        .cursor-sound.hover .wave {
+            stroke: var(--purple);
+            animation: waveAnim 0.5s ease infinite;
+        }
+        @keyframes waveAnim {
+            0%, 100% { d: path('M5,20 Q12,10 20,20 Q28,30 35,20'); }
+            50% { d: path('M5,20 Q12,30 20,20 Q28,10 35,20'); }
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* SOUND WAVE CANVAS                               */
+        /* ═══════════════════════════════════════════════ */
+        #waveCanvas {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* INTRO - SOUND PULSE                             */
+        /* ═══════════════════════════════════════════════ */
+        #intro {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: var(--black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #intro.exit {
+            animation: introExit 1s cubic-bezier(0.7,0,0.3,1) forwards;
+        }
+        @keyframes introExit {
+            0% { clip-path: circle(100% at 50% 50%); }
+            100% { clip-path: circle(0% at 50% 50%); }
+        }
+        .intro-logo {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 24px;
+        }
+        .intro-logo .bar {
+            width: 4px;
+            height: 48px;
+            background: var(--white);
+            animation: logoWave 1s ease-in-out infinite;
+        }
+        .intro-logo .bar:nth-child(2) { animation-delay: 0.1s; }
+        @keyframes logoWave {
+            0%, 100% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1); }
+        }
+        .intro-text {
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gray-400);
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* NAV                                             */
+        /* ═══════════════════════════════════════════════ */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 24px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8), transparent);
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .nav-logo .bar {
+            width: 3px;
+            height: 20px;
+            background: var(--white);
+        }
+        .nav-title {
+            margin-left: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        .nav-role {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gray-400);
+        }
+        nav a {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--white);
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 1px solid var(--gray-800);
+            border-radius: 100px;
+            transition: all 0.3s;
+        }
+        nav a:hover {
+            background: var(--white);
+            color: var(--black);
+            border-color: var(--white);
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* HERO                                            */
+        /* ═══════════════════════════════════════════════ */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 48px;
+            position: relative;
+            z-index: 2;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(93,121,223,0.15) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .hero-content {
+            max-width: 900px;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--gray-900);
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: 32px;
+        }
+        .hero-label::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            margin-bottom: 32px;
+        }
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, var(--blue), var(--purple), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-sub {
+            font-size: 18px;
+            font-weight: 400;
+            line-height: 1.7;
+            color: var(--gray-400);
+            max-width: 600px;
+            margin: 0 auto 48px;
+        }
+        .hero-sub strong {
+            color: var(--white);
+            font-weight: 500;
+        }
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            background: var(--white);
+            color: var(--black);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 100px;
+            transition: all 0.3s;
+        }
+        .hero-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 60px rgba(93,121,223,0.4);
+        }
+        .hero-cta svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s;
+        }
+        .hero-cta:hover svg {
+            transform: translateX(4px);
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* STATS ROW                                       */
+        /* ═══════════════════════════════════════════════ */
+        .stats {
+            padding: 80px 48px;
+            border-top: 1px solid var(--gray-900);
+            border-bottom: 1px solid var(--gray-900);
+            position: relative;
+            z-index: 2;
+        }
+        .stats-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 48px;
+            text-align: center;
+        }
+        .stat-item .num {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--white), var(--gray-400));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-item .label {
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gray-600);
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* WHAT I CREATE                                   */
+        /* ═══════════════════════════════════════════════ */
+        .create {
+            padding: 160px 48px;
+            position: relative;
+            z-index: 2;
+        }
+        .create-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section-header {
+            margin-bottom: 80px;
+        }
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+        .create-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        .create-card {
+            background: var(--gray-900);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 40px;
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+            position: relative;
+            overflow: hidden;
+        }
+        .create-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--blue), var(--purple));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s;
+        }
+        .create-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--blue);
+        }
+        .create-card:hover::before {
+            transform: scaleX(1);
+        }
+        .create-card.featured {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(93,121,223,0.1), rgba(196,125,229,0.05));
+            border-color: rgba(93,121,223,0.2);
+        }
+        .create-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 24px;
+        }
+        .create-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+        .create-card p {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--gray-400);
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* EXPERIENCE                                      */
+        /* ═══════════════════════════════════════════════ */
+        .experience {
+            padding: 160px 48px;
+            background: var(--gray-900);
+            position: relative;
+            z-index: 2;
+        }
+        .experience-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .exp-list {
+            margin-top: 64px;
+        }
+        .exp-item {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 48px;
+            padding: 48px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.3s;
+        }
+        .exp-item:hover {
+            padding-left: 16px;
+        }
+        .exp-item:last-child { border-bottom: none; }
+        .exp-year {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--blue);
+        }
+        .exp-content h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+        }
+        .exp-content .company {
+            font-size: 14px;
+            color: var(--gray-400);
+            margin-bottom: 12px;
+        }
+        .exp-content p {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--gray-400);
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* WHY ELEVENLABS                                  */
+        /* ═══════════════════════════════════════════════ */
+        .why {
+            padding: 160px 48px;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+        .why::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 1000px;
+            height: 1000px;
+            background: radial-gradient(circle, rgba(196,125,229,0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .why-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+        .why-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-top: 64px;
+        }
+        .why-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 40px;
+            transition: all 0.3s;
+        }
+        .why-card:hover {
+            background: rgba(93,121,223,0.05);
+            border-color: var(--blue);
+        }
+        .why-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .why-card h3::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--blue);
+            border-radius: 2px;
+        }
+        .why-card p {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--gray-400);
+            padding-left: 20px;
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* CTA                                             */
+        /* ═══════════════════════════════════════════════ */
+        .cta {
+            padding: 200px 48px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(180deg, var(--black), var(--gray-900));
+        }
+        .cta::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 400px;
+            background: radial-gradient(ellipse at bottom, rgba(93,121,223,0.2), transparent 70%);
+            pointer-events: none;
+        }
+        .cta-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+        .cta h2 {
+            font-size: clamp(3rem, 7vw, 5rem);
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+        .cta h2 .gradient {
+            background: linear-gradient(135deg, var(--blue), var(--purple), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .cta p {
+            font-size: 18px;
+            color: var(--gray-400);
+            margin-bottom: 48px;
+        }
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            color: var(--white);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 100px;
+            transition: all 0.3s;
+        }
+        .cta-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 80px rgba(93,121,223,0.5);
+        }
+        .cta-links {
+            margin-top: 64px;
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+        }
+        .cta-links a {
+            font-size: 14px;
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .cta-links a:hover { color: var(--white); }
+
+        /* ═══════════════════════════════════════════════ */
+        /* FOOTER                                          */
+        /* ═══════════════════════════════════════════════ */
+        footer {
+            padding: 32px 48px;
+            background: var(--gray-900);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .footer-logo .bar {
+            width: 2px;
+            height: 14px;
+            background: var(--gray-600);
+        }
+
+        /* ═══════════════════════════════════════════════ */
+        /* RESPONSIVE                                      */
+        /* ═══════════════════════════════════════════════ */
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+            .create-grid { grid-template-columns: 1fr 1fr; }
+            .create-card.featured { grid-column: span 2; }
+            .why-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            nav { padding: 16px 24px; }
+            .nav-title { display: none; }
+            .hero { padding: 120px 24px 80px; }
+            .stats { padding: 60px 24px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .create { padding: 80px 24px; }
+            .create-grid { grid-template-columns: 1fr; }
+            .create-card.featured { grid-column: span 1; }
+            .experience { padding: 80px 24px; }
+            .exp-item { grid-template-columns: 1fr; gap: 12px; }
+            .why { padding: 80px 24px; }
+            .cta { padding: 100px 24px; }
+            .cta-links { flex-direction: column; gap: 16px; }
+            footer { padding: 24px; flex-direction: column; gap: 16px; text-align: center; }
+            .cursor-sound { display: none; }
+            body { cursor: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SOUND FLOW CURSOR -->
+<div class="cursor-sound" id="cursor">
+    <svg viewBox="0 0 40 40">
+        <path class="wave" d="M5,20 Q12,10 20,20 Q28,30 35,20"/>
+    </svg>
+</div>
+
+<!-- WAVE CANVAS -->
+<canvas id="waveCanvas"></canvas>
+
+<!-- INTRO -->
+<div id="intro">
+    <div class="intro-logo">
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+    <div class="intro-text">Generating Creative</div>
+</div>
+
+<!-- NAV -->
+<nav>
+    <div style="display: flex; align-items: center;">
+        <div class="nav-logo">
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <span class="nav-title">ElevenLabs</span>
+    </div>
+    <div class="nav-role">AI Creative Producer / Remote Europe</div>
+    <a href="mailto:jan.lonnqvist@windowslive.com">Contact</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-label">Application</div>
+        <h1>
+            <span class="gradient">AI Creative</span><br>
+            Producer
+        </h1>
+        <p class="hero-sub">12+ years visual production. <strong>Deep generative AI expertise</strong> across image, video, and audio. Ready to create world-class content that inspires millions of ElevenLabs creators.</p>
+        <a href="#create" class="hero-cta">
+            View What I Create
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+    </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="num">12+</div>
+            <div class="label">Years Experience</div>
+        </div>
+        <div class="stat-item">
+            <div class="num">40+</div>
+            <div class="label">Global Markets</div>
+        </div>
+        <div class="stat-item">
+            <div class="num">1000+</div>
+            <div class="label">Assets Created</div>
+        </div>
+        <div class="stat-item">
+            <div class="num">6</div>
+            <div class="label">Major Brands</div>
+        </div>
+    </div>
+</section>
+
+<!-- WHAT I CREATE -->
+<section class="create" id="create">
+    <div class="create-inner">
+        <div class="section-header">
+            <div class="section-label">What I Create</div>
+            <h2 class="section-title">World-Class AI Content</h2>
+        </div>
+        <div class="create-grid">
+            <div class="create-card featured">
+                <div class="create-icon">🎬</div>
+                <h3>AI Video Production</h3>
+                <p>Text-to-video and image-to-video generation for cinematic, realistic, and stylized outputs. Creating content that showcases ElevenLabs' creative tools at their best.</p>
+            </div>
+            <div class="create-card">
+                <div class="create-icon">🖼️</div>
+                <h3>AI Visual Generation</h3>
+                <p>Prompt engineering for stunning imagery. Mood boards, campaign visuals, and explore page examples.</p>
+            </div>
+            <div class="create-card">
+                <div class="create-icon">📝</div>
+                <h3>Prompt Guides</h3>
+                <p>Writing and refining prompts that others can replicate. Scalable workflows for the community.</p>
+            </div>
+            <div class="create-card">
+                <div class="create-icon">🎓</div>
+                <h3>Team AI Training</h3>
+                <p>Teaching colleagues how to use generative AI effectively. Hands-on workshops, workflow integration, and adoption support.</p>
+            </div>
+            <div class="create-card featured">
+                <div class="create-icon">✨</div>
+                <h3>Creator Education</h3>
+                <p>Partnering with social teams to educate users and inspire creators. Building tutorials, case studies, and workflows that help millions unlock AI creativity.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section class="experience">
+    <div class="experience-inner">
+        <div class="section-header">
+            <div class="section-label">Experience</div>
+            <h2 class="section-title">12+ Years Visual Production</h2>
+        </div>
+        <div class="exp-list">
+            <div class="exp-item">
+                <div class="exp-year">2024</div>
+                <div class="exp-content">
+                    <h3>Senior Graphic Designer</h3>
+                    <div class="company">DHL / Agency / 12+ European Markets</div>
+                    <p>Multi-market campaign delivery with AI integration. Introduced AI workflows to team, conducted training sessions, and built scalable processes for adoption.</p>
+                </div>
+            </div>
+            <div class="exp-item">
+                <div class="exp-year">2022 - 2024</div>
+                <div class="exp-content">
+                    <h3>Visual Specialist</h3>
+                    <div class="company">Rituals Cosmetics / Amsterdam / Global</div>
+                    <p>Seasonal campaigns across 40+ markets. Pioneered AI tools for rapid prototyping. Trained team members on AI workflow integration and best practices.</p>
+                </div>
+            </div>
+            <div class="exp-item">
+                <div class="exp-year">2022</div>
+                <div class="exp-content">
+                    <h3>Creative / DTP Lead</h3>
+                    <div class="company">HelloFresh / Amsterdam</div>
+                    <p>Led design team at Europe's largest meal kit company. High-volume creative production, thousands of assets weekly, AI-enhanced workflows.</p>
+                </div>
+            </div>
+            <div class="exp-item">
+                <div class="exp-year">2019</div>
+                <div class="exp-content">
+                    <h3>Art Director</h3>
+                    <div class="company">Valve / Helsinki</div>
+                    <p>Art direction and visual storytelling at one of Finland's leading creative agencies. Campaign development, client presentations.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- WHY ELEVENLABS -->
+<section class="why">
+    <div class="why-inner">
+        <div class="section-header">
+            <div class="section-label">Why ElevenLabs</div>
+            <h2 class="section-title">The Right Fit</h2>
+        </div>
+        <div class="why-grid">
+            <div class="why-card">
+                <h3>Deep AI Creative Experience</h3>
+                <p>Years of hands-on work with generative image, video, and audio models. Portfolio of production-ready AI content across international campaigns.</p>
+            </div>
+            <div class="why-card">
+                <h3>Strong Design Judgment</h3>
+                <p>12+ years distinguishing quality creative work. The eye to know what's world-class and what needs refinement.</p>
+            </div>
+            <div class="why-card">
+                <h3>Visual Storytelling</h3>
+                <p>Art direction background. Understanding of narrative, pacing, and emotional impact. Content that connects, not just impresses.</p>
+            </div>
+            <div class="why-card">
+                <h3>Platform Knowledge</h3>
+                <p>Deep understanding of YouTube, Instagram, and X discovery mechanisms. Creating content optimized for how people actually find and share.</p>
+            </div>
+            <div class="why-card">
+                <h3>AI Training Experience</h3>
+                <p>Track record of teaching teams to adopt AI tools. Building workflows, running workshops, and ensuring lasting integration into daily creative processes.</p>
+            </div>
+            <div class="why-card">
+                <h3>Fast & Independent</h3>
+                <p>High-velocity output without hand-holding. Self-directed work that matches ElevenLabs' pace and ambition.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <div class="cta-inner">
+        <h2>Let's Create<br><span class="gradient">Remarkable</span></h2>
+        <p>Ready to produce world-class AI content that inspires millions of ElevenLabs creators.</p>
+        <a href="mailto:jan.lonnqvist@windowslive.com" class="cta-btn">Get In Touch</a>
+        <div class="cta-links">
+            <a href="mailto:jan.lonnqvist@windowslive.com">jan.lonnqvist@windowslive.com</a>
+            <a href="tel:+31619584748">+31 619 584 748</a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-logo">
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+    <span>Jan Lönnqvist / 2026</span>
+    <span>Amsterdam, NL / Remote Europe</span>
+</footer>
+
+<script>
+// SOUND FLOW CURSOR
+const cursor = document.getElementById('cursor');
+let cx = 0, cy = 0, tx = 0, ty = 0;
+
+document.addEventListener('mousemove', e => {
+    tx = e.clientX;
+    ty = e.clientY;
+});
+
+function animateCursor() {
+    cx += (tx - cx) * 0.12;
+    cy += (ty - cy) * 0.12;
+    cursor.style.left = cx + 'px';
+    cursor.style.top = cy + 'px';
+    requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+document.querySelectorAll('a, .create-card, .exp-item, .why-card, .stat-item').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+
+// WAVE CANVAS
+const canvas = document.getElementById('waveCanvas');
+const ctx = canvas.getContext('2d');
+let time = 0;
+
+function initWave() {
+    canvas.width = window.innerWidth;
+    canvas.height = 300;
+}
+initWave();
+window.addEventListener('resize', initWave);
+
+function drawWave() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw multiple waves
+    const waves = [
+        { amp: 30, freq: 0.01, speed: 0.02, color: 'rgba(93,121,223,0.3)' },
+        { amp: 20, freq: 0.015, speed: 0.03, color: 'rgba(196,125,229,0.2)' },
+        { amp: 15, freq: 0.02, speed: 0.025, color: 'rgba(25,162,193,0.15)' }
+    ];
+
+    waves.forEach(wave => {
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height);
+
+        for (let x = 0; x <= canvas.width; x++) {
+            const y = canvas.height / 2 + Math.sin(x * wave.freq + time * wave.speed) * wave.amp;
+            ctx.lineTo(x, y);
+        }
+
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.closePath();
+        ctx.fillStyle = wave.color;
+        ctx.fill();
+    });
+
+    time++;
+    requestAnimationFrame(drawWave);
+}
+drawWave();
+
+// INTRO
+setTimeout(() => {
+    document.getElementById('intro').classList.add('exit');
+    setTimeout(() => document.getElementById('intro').remove(), 1000);
+}, 2000);
+
+// PROTECTION
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (e.key === 'F12') e.preventDefault();
+    if (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key)) e.preventDefault();
+    if (e.ctrlKey && e.key === 'u') e.preventDefault();
+});
+</script>
+
+</body>
+</html>
