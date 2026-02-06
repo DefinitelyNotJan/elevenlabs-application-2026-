@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Jan Lönnqvist | AI Creative Producer | ElevenLabs</title>
+    <script>
+    document.addEventListener('contextmenu',function(e){e.preventDefault()});
+    document.addEventListener('keydown',function(e){
+        if(e.key==='F12')e.preventDefault();
+        if(e.ctrlKey&&e.shiftKey&&['I','i','J','j','C','c'].includes(e.key))e.preventDefault();
+        if(e.ctrlKey&&['u','U','s','S'].includes(e.key))e.preventDefault();
+        if(e.metaKey&&e.altKey&&['I','i','J','j','C','c'].includes(e.key))e.preventDefault();
+        if(e.metaKey&&['u','U','s','S'].includes(e.key))e.preventDefault();
+    });
+    document.addEventListener('dragstart',function(e){e.preventDefault()});
+    document.addEventListener('selectstart',function(e){
+        if(e.target.closest&&(e.target.closest('a')||e.target.closest('input')))return;
+        e.preventDefault();
+    });
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
